@@ -34,9 +34,6 @@
     },
     "full_site_indexing": {
       "type": "boolean"
-    },
-    "s": {
-      "type": "string"
     }
   }
 }

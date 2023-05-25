@@ -105,6 +105,13 @@ async function searchData(searchTerm) {
         const body = {
             size: 100,
             // query
+            "aggs": {
+                "description": {
+                    "terms": {
+                        "field": "description.keyword",
+                    }
+                }
+            }
         }
 
         if(searchTerm) {

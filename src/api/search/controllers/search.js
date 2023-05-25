@@ -11,9 +11,14 @@ module.exports = {
       if (resp?.hits?.hits) {
         const specificFields = /*filteredMatches*/resp.hits.hits.map((data) => {
           const dt = data['_source'];
-          return { title: dt.title, slug: dt.slug, description: dt.description }
+          // return { title: dt.title, slug: dt.slug, description: dt.description }
+          return dt
         })
-        ctx.body = specificFields;
+        ctx.body = {
+          "total": resp.hits.total.value,
+          "hits": specificFields, //resp.hits.hits,
+          "aggregations": resp.aggregations,
+        } // resp //specificFields;
       }
       else
         ctx.body = {}

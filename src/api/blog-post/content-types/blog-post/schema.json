@@ -4,23 +4,51 @@
   "info": {
     "singularName": "blog-post",
     "pluralName": "blog-posts",
-    "displayName": "blog-post"
+    "displayName": "ezu",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
   },
   "pluginOptions": {},
   "attributes": {
-    "title": {
+    "label": {
       "type": "string"
     },
     "description": {
       "type": "string"
     },
-    "content": {
+    "slug": {
       "type": "string"
     },
-    "slug": {
+    "canvas": {
+      "type": "string"
+    },
+    "manifest": {
+      "type": "string"
+    },
+    "ne_class": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "string"
+    },
+    "xywh": {
+      "type": "string"
+    },
+    "image": {
+      "type": "string"
+    },
+    "latitude": {
+      "type": "float"
+    },
+    "longitude": {
+      "type": "float"
+    },
+    "source": {
       "type": "string"
     }
   }

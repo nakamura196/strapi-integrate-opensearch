@@ -29,7 +29,7 @@ function initializeESClient() {
     }
 }
 
-async function indexData({ itemId, title, description, content, slug }) {
+async function indexData({ itemId, label, description, slug, ne_class, image, source, manifest, target }) {
     const indexName = process.env.ELASTIC_INDEX_NAME;
 
 
@@ -39,7 +39,7 @@ async function indexData({ itemId, title, description, content, slug }) {
             index: indexName,
             id: itemId,
             body: {
-                slug, title, description, content
+                slug, label, description, ne_class, image, source, manifest, target
             },
             refresh: true,
         })
@@ -77,7 +77,7 @@ async function searchData(searchTerm) {
                 "should": [
                     {
                         "match_phrase": {
-                            "title": {
+                            "label": {
                                 "query": searchTerm,
                             }
                         }
@@ -106,9 +106,14 @@ async function searchData(searchTerm) {
             size: 100,
             // query
             "aggs": {
-                "description": {
+                "ne_class": {
                     "terms": {
-                        "field": "description.keyword",
+                        "field": "ne_class.keyword",
+                    }
+                },
+                "source": {
+                    "terms": {
+                        "field": "source.keyword",
                     }
                 }
             }

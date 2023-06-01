@@ -18,8 +18,8 @@ const { indexData, removeIndexedData } = require('./elasticClient');
                     const api = 'api::' + col + '.' + col
                     const item = await strapi.entityService.findOne(api, recs[r].item_id);
                     const indexItemId = col + "::" + item.id;
-                    const {title, description, content, slug} = item;
-                    await indexData({itemId : indexItemId, title, description, content, slug})            
+                    const {label, description, slug, ne_class, image, source, manifest, target} = item;
+                    await indexData({itemId : indexItemId, label, description, slug, ne_class, image, source, manifest, target})            
                     await strapi.entityService.update('api::search-indexing-request.search-indexing-request', recs[r].id, {
                         data : {
                             'indexing_status' : 'Done'

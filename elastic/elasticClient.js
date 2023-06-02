@@ -68,72 +68,133 @@ async function removeIndexedData({ itemId }) {
     }
 }
 
-async function searchData(query) {
-    // console.log({query, ctx})
-    const searchTerm = query.keyword
+const createFilters = (query) => {
+    const filters = {};
 
-    console.log({query})
+    const conjunctions = {
+        "": "AND",
+    };
+
+    if(query.filter) {
+        const filters2 = query.filter
+        for(const key in filters2) {
+            const value = filters2[key]
+            console.log(value)
+            if(value.group) {
+
+                conjunctions[key] = value.group.conjunction
+
+            } else if(value.condition) {
+                if(!filters[key]) {
+                    filters[key] = {
+                        path: value.condition.path,
+                        value: value.condition.value,
+                        operator: value.condition.operator,
+                        memberOf: value.condition.memberOf,
+                    }
+                }
+            } else {
+
+                const name = `${key}.${value}`
+                filters[name] = {
+                    path: key,
+                    value: value,
+                    operator: "eq",
+                    memberOf: "",
+                }
+                
+            }
+        }
+    }
+    return [filters, conjunctions]
+}
+
+const createQuery = (filters, conjunctions) => {
+  const members = {};
+
+  for (const key in filters) {
+    const filter = filters[key];
+
+    const memberOf = filter.memberOf;
+
+    if (!members[memberOf]) {
+      members[memberOf] = [];
+    }
+
+    members[memberOf].push(filter);
+  }
+
+  const musts = [];
+
+  const esQuery = {
+    bool: {
+      must: musts,
+    },
+  };
+
+  for (const conjunction in conjunctions) {
+    const filters = members[conjunction];
+
+    if (!filters) {
+      continue;
+    }
+
+    const clauses = [];
+
+    for (const key in filters) {
+      const filter = filters[key];
+
+      const operator = filter.operator;
+
+      if (operator == "CONTAINS") {
+        const condition = {
+          match_phrase: {
+            [filter.path]: {
+              query: filter.value,
+            },
+          },
+        };
+
+        clauses.push(condition);
+      } else if (operator == "eq") {
+        const condition = {
+          term: {
+            [`${filter.path}`]: filter.value, // .keyword
+          },
+        };
+
+        clauses.push(condition);
+      }
+    }
+
+    if (conjunctions[conjunction] === "AND") {
+      musts.push({
+        bool: {
+          must: clauses,
+        },
+      });
+    } else {
+      musts.push({
+        bool: {
+          should: clauses,
+        },
+      });
+    }
+  }
+
+  return esQuery;
+};
+
+async function searchData(query) {
 
     const limit = /*query["page[limit]"]*/ query?.page?.limit || 20
     const offset = /*query["page[offset]"]*/ query?.page?.offset || 0
 
     try {
-        const esQuery = {
-            bool: {
-                "must": [],
-                "should": [],
-            }
-        }
 
-        if(searchTerm) {
-            esQuery.bool = {
-                "should": [
-                    {
-                        "match_phrase": {
-                            "label": {
-                                "query": searchTerm,
-                            }
-                        }
-                    }
-                    /*
-                    {
-                        "match": {
-                            "content": searchTerm
-                        }
-                    },
-                    {
-                        "match": {
-                            "title": searchTerm
-                        }
-                    },
-                    {
-                        "match": {
-                            "description": searchTerm
-                        }
-                    }*/
-                ]
-            }
-        }
+        const [filters, conjunctions] = createFilters(query)
 
-        if(query.filter) {
-            const filters = query.filter
-            for(const key in filters) {
-                esQuery.bool.must.push({
-                    "term": {
-                        [`${key}.keyword`]: filters[key]
-                    }
-                })
-            }
-            /*
-            query.bool.must.push({
-                "term": {
-                    "ne_class.keyword": query.filter
-                }
-            })
-            */
-        }
-
-        console.log(esQuery.bool.must)
+        const esQuery2 = createQuery(filters, conjunctions)
 
         const body = {
             size: limit,
@@ -150,13 +211,8 @@ async function searchData(query) {
                         "field": "source.keyword",
                     }
                 }
-            }
-        }
-
-        // console.log({body})
-
-        if(searchTerm || true) {
-            body.query = esQuery
+            },
+            "query": esQuery2,
         }
 
         const result = await client.search({

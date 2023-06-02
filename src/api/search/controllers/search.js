@@ -15,27 +15,37 @@ module.exports = {
       if (resp?.hits?.hits) {
         const specificFields = /*filteredMatches*/resp.hits.hits.map((data) => {
           const dt = data['_source'];
-          // return { title: dt.title, slug: dt.slug, description: dt.description }
           dt.id = dt.slug;
           return dt
         })
 
-        var data = /*[
-          { id: 1, firstName: 'Sandro', lastName: 'Munda' },
-          { id: 2, firstName: 'John', lastName: 'Doe' }
-        ]*/ specificFields;
+        var data = specificFields;
+
 
         var UserSerializer = new JSONAPISerializer('users', {
           attributes: ['label', 'description', "ne_class", "image", "source", "manifest", "target"]
         });
-        
+
         var users = UserSerializer.serialize(data);
 
+        const facets = []
+
+        for (const key in resp.aggregations) {
+          const facet = resp.aggregations[key];
+          const buckets = facet.buckets;
+          const facetValues = buckets.map((bucket) => {
+            return {
+              values: {
+                "id": bucket.key,
+                "label": bucket.key,
+                "count": bucket.doc_count
+              }
+            }
+          })
+          facets.push({ "id": key, "label": key, "terms": facetValues })
+        }
+
         ctx.body = {
-          // "total": resp.hits.total.value,
-          // "hits": specificFields, //resp.hits.hits,
-          // "aggregations": resp.aggregations,
-          // specificFields,
           "jsonapi": {
             "version": "1.0",
             "meta": {
@@ -49,7 +59,7 @@ module.exports = {
           "data": users.data,
           "meta": {
             "count": resp.hits.total.value,
-            "facets": resp.aggregations
+            "facets": facets // resp.aggregations
           }
         } // resp //specificFields;
       }

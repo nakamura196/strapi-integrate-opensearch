@@ -159,7 +159,7 @@ const createQuery = (filters, conjunctions) => {
       } else if (operator == "eq") {
         const condition = {
           term: {
-            [`${filter.path}`]: filter.value, // .keyword
+            [`${filter.path}.keyword`]: filter.value, // .keyword
           },
         };
 
@@ -194,7 +194,11 @@ async function searchData(query) {
 
         const [filters, conjunctions] = createFilters(query)
 
+        // console.log({filters})
+
         const esQuery2 = createQuery(filters, conjunctions)
+
+        console.log(JSON.stringify(esQuery2, null, 2))
 
         const body = {
             size: limit,

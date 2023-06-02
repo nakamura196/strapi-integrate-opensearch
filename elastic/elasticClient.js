@@ -125,10 +125,12 @@ const createQuery = (filters, conjunctions) => {
   }
 
   const musts = [];
+  const must_not = []
 
   const esQuery = {
     bool: {
       must: musts,
+      must_not: must_not
     },
   };
 
@@ -140,6 +142,7 @@ const createQuery = (filters, conjunctions) => {
     }
 
     const clauses = [];
+    const clauses_not = []
 
     for (const key in filters) {
       const filter = filters[key];
@@ -164,10 +167,24 @@ const createQuery = (filters, conjunctions) => {
         };
 
         clauses.push(condition);
+      } else if (operator == "neq") {
+        const condition = {
+          term: {
+            [`${filter.path}.keyword`]: filter.value, // .keyword
+          },
+        };
+
+        clauses_not.push(condition);
       }
     }
 
-    if (conjunctions[conjunction] === "AND") {
+    if (clauses_not.length > 0) { 
+        must_not.push({
+            bool: {
+                should: clauses_not,
+            },
+        });
+    } else if (conjunctions[conjunction] === "AND") {
       musts.push({
         bool: {
           must: clauses,

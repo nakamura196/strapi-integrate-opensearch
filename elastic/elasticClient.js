@@ -89,8 +89,8 @@ const createFilters = (query) => {
                     filters[key] = {
                         path: value.condition.path,
                         value: value.condition.value,
-                        operator: value.condition.operator,
-                        memberOf: value.condition.memberOf,
+                        operator: value.condition.operator || "eq",
+                        memberOf: value.condition.memberOf || "",
                     }
                 }
             } else {

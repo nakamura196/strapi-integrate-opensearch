@@ -68,12 +68,25 @@ async function removeIndexedData({ itemId }) {
     }
 }
 
-async function searchData(searchTerm) {
+async function searchData(query) {
+    // console.log({query, ctx})
+    const searchTerm = query.keyword
+
+    console.log({query})
+
+    const limit = /*query["page[limit]"]*/ query?.page?.limit || 20
+    const offset = /*query["page[offset]"]*/ query?.page?.offset || 0
+
     try {
-        const query = {}
+        const esQuery = {
+            bool: {
+                "must": [],
+                "should": [],
+            }
+        }
 
         if(searchTerm) {
-            query.bool = {
+            esQuery.bool = {
                 "should": [
                     {
                         "match_phrase": {
@@ -102,8 +115,29 @@ async function searchData(searchTerm) {
             }
         }
 
+        if(query.filter) {
+            const filters = query.filter
+            for(const key in filters) {
+                esQuery.bool.must.push({
+                    "term": {
+                        [`${key}.keyword`]: filters[key]
+                    }
+                })
+            }
+            /*
+            query.bool.must.push({
+                "term": {
+                    "ne_class.keyword": query.filter
+                }
+            })
+            */
+        }
+
+        console.log(esQuery.bool.must)
+
         const body = {
-            size: 100,
+            size: limit,
+            from: offset,
             // query
             "aggs": {
                 "ne_class": {
@@ -119,8 +153,10 @@ async function searchData(searchTerm) {
             }
         }
 
-        if(searchTerm) {
-            body.query = query
+        // console.log({body})
+
+        if(searchTerm || true) {
+            body.query = esQuery
         }
 
         const result = await client.search({

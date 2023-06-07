@@ -225,11 +225,13 @@ async function searchData(query) {
                 "ne_class": {
                     "terms": {
                         "field": "ne_class.keyword",
+                        "min_doc_count" : 0
                     }
                 },
                 "source": {
                     "terms": {
                         "field": "source.keyword",
+                        "min_doc_count" : 0
                     }
                 }
             },

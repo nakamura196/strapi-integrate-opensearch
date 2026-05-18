@@ -32,5 +32,11 @@
     "node": ">=14.19.1 <=18.x.x",
     "npm": ">=6.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "axios": ">=1.15.2"
+  },
+  "resolutions": {
+    "axios": ">=1.15.2"
+  }
 }
